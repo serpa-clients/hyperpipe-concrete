@@ -1,8 +1,8 @@
 from typing import List
-from hyperpipe_core.kg import Entity, Relationship, Triplet
-from hyperpipe_core import AsyncStep,Result
+from ..models import Entity, Relationship, Triplet, GraphBuilderResult
+from hyperpipe_core import AsyncStep
 import asyncio
-from hyperengine import Embedder
+from ...hyperengine import Embedder
 
 class TripletEmbedder(AsyncStep):
     def __init__(
@@ -98,13 +98,10 @@ class TripletEmbedder(AsyncStep):
      
         return relationships
 
-    def execute(self, result: Result) -> Result:
-        return asyncio.run(self._execute(result))
-    
-    async def _execute(self, result: Result) -> Result:        
+    async def execute(self, result: GraphBuilderResult) -> GraphBuilderResult:     
         
-        entities_from_triplets = self.extract_entities_from_triplets(result.relationship_extraction.output)
-        relationships_from_triplets = self.extract_relationships_from_triplets(result.relationship_extraction.output)
+        entities_from_triplets = self.extract_entities_from_triplets(result.relation_extraction)
+        relationships_from_triplets = self.extract_relationships_from_triplets(result.relation_extraction)
         
         self.log.info(f"Processing {len(entities_from_triplets)} entities and {len(relationships_from_triplets)} relationships for embedding")
     
@@ -169,6 +166,6 @@ class TripletEmbedder(AsyncStep):
         self.log.info(f"Embedding completed: {embedded_entities} entities, {embedded_relationships} relationships embedded")
         return result
 
-    def save_result(self, step_result: Result, result: Result):
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult):
         result = step_result
         return result

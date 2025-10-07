@@ -1,6 +1,6 @@
 from typing import List
-from hyperpipe_core import Step, Result
-from hyperpipe_core.kg import Entity, Triplet
+from hyperpipe_core import Step
+from ..models import Entity, Triplet, GraphBuilderResult
 from rapidfuzz import process,fuzz
 
 class TripletEntityMerger(Step):
@@ -48,27 +48,27 @@ class TripletEntityMerger(Step):
                         
         return merged_triplets
 
-    def execute(self, result: Result) -> Result:
+    def execute(self, result: GraphBuilderResult) -> GraphBuilderResult:
         
-        if not result.relationship_extraction:
+        if not result.relation_extraction:
             return result
 
         if not result.entity_extraction:
             return result
 
-        initial_count = len(result.relationship_extraction.output)
+        initial_count = len(result.relation_extraction)
         self.log.info(f"Merging {initial_count} triplets")
 
         merged_triplets = self._merge_triplets_with_entities(
-            result.relationship_extraction.output, 
-            result.entity_extraction.output
+            result.relation_extraction, 
+            result.entity_extraction
         )
         
-        result.relationship_extraction.output = merged_triplets
+        result.relation_extraction = merged_triplets
         self.log.info(f"Triplet-entity merging completed: {len(merged_triplets)} triplets")
         
         return result
         
-    def save_result(self, step_result: Result, result: Result):
-        result.relationship_extraction = step_result.relationship_extraction
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult):
+        result.relation_extraction = step_result.relation_extraction
         return result

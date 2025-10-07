@@ -1,15 +1,24 @@
 from abc import abstractmethod
 from typing import Any
-from hyperpipe_core import Step,Result
+from hyperpipe_core import Step
+from ..models import GraphBuilderResult
+import logging
 
 
 class Exporter(Step):
     """Base class for all data exporters in hyperpipe"""
     
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None, logger: logging.Logger = None):
         self.name = name or self.__class__.__name__
+        self._logger = logger
     
-    def execute(self, input_data: Result) -> None:
+    @property
+    def log(self) -> logging.Logger:
+        if self._logger is None:
+            self._logger = logging.getLogger(self.__class__.__name__)
+        return self._logger
+    
+    def execute(self, input_data: GraphBuilderResult) -> None:
         """Execute the data exporting step"""
         
         # Extract data to export from result
@@ -18,11 +27,11 @@ class Exporter(Step):
         # Perform the actual export
         self._export_data(data_to_export)
         
-    def save_result(self, step_result: Result, result: Result) -> None:
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult) -> None:
         pass
     
     @abstractmethod
-    def _extract_data(self, result: Result) -> Any:
+    def _extract_data(self, result: GraphBuilderResult) -> Any:
         """Extract data to export from the pipeline result"""
         raise NotImplementedError
     

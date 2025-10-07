@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 import re
 
 from .base_llm_step import BaseLLMStep
-from hyperpipe_core.kg import Entity, EntityMetadata
+from ..models import Entity, EntityMetadata
 
 
 class BaseExtractor(BaseLLMStep):

@@ -1,9 +1,9 @@
 from typing import List, Dict, Optional, Tuple
-from hyperpipe_core import Step, Result
-from hyperpipe_core.kg import Triplet, Entity
+from hyperpipe_core import Step
+from ..models import Triplet, Entity, GraphBuilderResult
 
 
-class Neo4jEntityMatcher(Step[Result, None]):
+class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
     
     def __init__(
         self,
@@ -119,12 +119,12 @@ class Neo4jEntityMatcher(Step[Result, None]):
         
         return triplets
     
-    def execute(self, result: Result) -> None:
+    def execute(self, result: GraphBuilderResult) -> None:
         
-        if not result.relationship_extraction or not result.relationship_extraction.output:
+        if not result.relation_extraction:
             return None
         
-        triplets = result.relationship_extraction.output
+        triplets = result.relation_extraction
         unique_entities = self._extract_unique_entities(triplets)
         self.log.info(f"Matching {len(unique_entities)} entities against Neo4j")
         
@@ -157,6 +157,6 @@ class Neo4jEntityMatcher(Step[Result, None]):
         self.log.info(f"Neo4j matching completed: {matches_found} entities replaced")
         return None
     
-    def save_result(self, step_result: Result, result: Result) -> None:
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult) -> None:
         pass
 

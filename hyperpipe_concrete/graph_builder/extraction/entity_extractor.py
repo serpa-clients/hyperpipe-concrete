@@ -1,8 +1,7 @@
 from typing import List
 
 from .base_extractor import BaseExtractor
-from hyperpipe_core import Result
-from hyperpipe_core.kg import Entity
+from ..models import Entity, GraphBuilderResult
 from ..utils.extraction_models import EntitiesListResponse
 from ..utils.prompts import EntityExtractionPrompts
   
@@ -27,7 +26,7 @@ class AsyncEntityExtractor(BaseExtractor):
         self.user_prompt_template = EntityExtractionPrompts.USER_TEMPLATE    
 
     
-    async def execute(self, data: Result) -> List[Entity]:
+    async def execute(self, data: GraphBuilderResult) -> List[Entity]:
         
         chunks = data.initial_input.chunks
         if self.iteration >= len(chunks):
@@ -79,11 +78,12 @@ class AsyncEntityExtractor(BaseExtractor):
         
         return entities
     
-    def save_result(self, step_result: List[Entity], result: Result) -> None:
-        if result.entity_extraction is None:
-            result.entity_extraction = step_result
-        else:
-            result.entity_extraction.output.extend(step_result)
+    def save_result(self, step_result: List[Entity], result: GraphBuilderResult) -> None:
+        current_list = result.__dict__.get('entity_extraction', [])
+        if not isinstance(current_list, list):
+            current_list = []
+        current_list.extend(step_result)
+        result.__dict__['entity_extraction'] = current_list
             
     
     

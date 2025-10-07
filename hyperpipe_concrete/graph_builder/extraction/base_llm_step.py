@@ -5,7 +5,7 @@ import asyncio
 import time
 
 from hyperpipe_core import AsyncStep, Result
-from hyperengine import Llm
+from ...hyperengine import Llm
 
 T = TypeVar('T')
 U = TypeVar('U')

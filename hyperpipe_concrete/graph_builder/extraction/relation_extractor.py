@@ -1,8 +1,7 @@
 from typing import List, Tuple
 
-from hyperengine import qChunk
-from hyperpipe_core import Result
-from hyperpipe_core.kg import Triplet, TripletMetadata, Relationship, Entity
+from ...hyperengine import qChunk
+from ..models import Triplet, TripletMetadata, Relationship, Entity, GraphBuilderResult
 
 from .base_extractor import BaseExtractor
 from ..utils.prompts import RelationExtractionPrompts
@@ -146,10 +145,10 @@ class AsyncRelationExtractor(BaseExtractor):
         
         return triplets
     
-    async def execute(self, data: Result) -> List[Triplet]:
+    async def execute(self, data: GraphBuilderResult) -> List[Triplet]:
         
         
-        entities = data.entity_extraction.output
+        entities = data.entity_extraction or []
         current_chunk = data.initial_input.chunks[self.iteration]
 
         final_triplets = await self.extract_relations_from_chunk(current_chunk, entities)
@@ -159,13 +158,7 @@ class AsyncRelationExtractor(BaseExtractor):
         return final_triplets
 
 
-    def save_result(self, step_result: List[Triplet], result: Result) -> None:
-           
-            if result.relationship_extraction is None:
-                result.relationship_extraction = step_result
-            else:
-                new_triplets = step_result
-                
-                result.relationship_extraction.output.extend(new_triplets)
+    def save_result(self, step_result: List[Triplet], result: GraphBuilderResult) -> None:
+        result.relation_extraction.extend(step_result)
                 
         

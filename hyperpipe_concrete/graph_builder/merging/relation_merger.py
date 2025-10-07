@@ -1,6 +1,6 @@
 from typing import List
-from hyperpipe_core import Step, Result
-from hyperpipe_core.kg import Relationship
+from hyperpipe_core import Step
+from ..models import Relationship, GraphBuilderResult
 from rapidfuzz import process, fuzz
 
 
@@ -39,12 +39,12 @@ class RelationTextMerger(Step):
                 
         return unique_relationships
 
-    def execute(self, result: Result) -> Result:
-        if not result.relationship_extraction or not result.relationship_extraction.output:
+    def execute(self, result: GraphBuilderResult) -> GraphBuilderResult:
+        if not result.relation_extraction:
             self.log.info("No relationships to process for merging")
             return result
         
-        relationships = [triplet.relation for triplet in result.relationship_extraction.output]
+        relationships = [triplet.relation for triplet in result.relation_extraction]
         self.log.info(f"Merging {len(relationships)} relations")
         
         # Perform name-based deduplication
@@ -52,13 +52,13 @@ class RelationTextMerger(Step):
         self.log.info(f"Name-based deduplication completed: {len(relationships)} relationships remaining")
         
         # Update the triplets with the merged relationships
-        for i, triplet in enumerate(result.relationship_extraction.output):
+        for i, triplet in enumerate(result.relation_extraction):
             if i < len(relationships):
                 triplet.relation = relationships[i]
         
         self.log.info(f"Relation merging completed: {len(relationships)} final relationships")
         return result
 
-    def save_result(self, step_result: Result, result: Result):
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult):
         result = step_result
         return result

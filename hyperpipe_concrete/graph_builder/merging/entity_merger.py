@@ -1,6 +1,6 @@
 from typing import List
-from hyperpipe_core import Step, Result
-from hyperpipe_core.kg import Entity
+from hyperpipe_core import Step
+from ..models import Entity, GraphBuilderResult
 from rapidfuzz import process,fuzz
 
 
@@ -83,24 +83,24 @@ class EntityTextMerger(Step):
 
        
 
-    def execute(self, result: Result) -> Result:
+    def execute(self, result: GraphBuilderResult) -> GraphBuilderResult:
         
         if not result.entity_extraction:
             return result
 
-        initial_count = len(result.entity_extraction.output)
+        initial_count = len(result.entity_extraction)
         self.log.info(f"Merging {initial_count} entities")
 
-        unique_by_name = self._deduplicate_by_name(result.entity_extraction.output)
+        unique_by_name = self._deduplicate_by_name(result.entity_extraction)
         self.log.debug(f"Name deduplication: {initial_count} -> {len(unique_by_name)} entities")
         
         normalized_entities = self._normalize_labels(unique_by_name)
-        result.entity_extraction.output = normalized_entities
+        result.entity_extraction = normalized_entities
         
         self.log.info(f"Entity merging completed: {len(normalized_entities)} final entities")
         return result
         
         
-    def save_result(self, step_result: Result, result: Result):
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult):
         result.entity_extraction = step_result.entity_extraction
         return result

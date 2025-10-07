@@ -1,5 +1,5 @@
-from hyperpipe_core import Result
 from .base_cleaner import Cleaner
+from ..models import GraphBuilderResult
 
 class TripletCleaner(Cleaner):
     def __init__(
@@ -10,15 +10,15 @@ class TripletCleaner(Cleaner):
     ):
         super().__init__(name=name, remove_punctuation=remove_punctuation, normalize_case=normalize_case)
 
-    async def execute(self, result: Result) -> Result:
+    async def execute(self, result: GraphBuilderResult) -> GraphBuilderResult:
         
-        if not result.relationship_extraction:
+        if not result.relation_extraction:
             return result
 
-        initial_count = len(result.relationship_extraction.output)
+        initial_count = len(result.relation_extraction)
         self.log.info(f"Cleaning {initial_count} triplets")
 
-        for triplet in result.relationship_extraction.output:
+        for triplet in result.relation_extraction:
             self._clean_entity(triplet.head)
             
             original_relation_name = triplet.relation.name
@@ -31,6 +31,6 @@ class TripletCleaner(Cleaner):
         self.log.info(f"Triplet cleaning completed")
         return result
 
-    def save_result(self, step_result: Result, result: Result):
-        result.relationship_extraction = step_result.relationship_extraction
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult):
+        result.relation_extraction = step_result.relation_extraction
         return result

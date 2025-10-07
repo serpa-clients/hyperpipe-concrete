@@ -1,6 +1,5 @@
 from typing import List, Dict, Any
-from hyperpipe_core import Result
-from hyperpipe_core.kg import Triplet
+from ..models import Triplet, GraphBuilderResult
 from .base_exporter import Exporter
 import json
 import re
@@ -160,11 +159,11 @@ class Neo4jExporter(Exporter):
         
         return query_part, parameters
     
-    def _extract_data(self, result: Result) -> List[Triplet]:
-        if not result.relationship_extraction or not result.relationship_extraction.output:
+    def _extract_data(self, result: GraphBuilderResult) -> List[Triplet]:
+        if not result.relation_extraction:
             return []
         
-        triplets = result.relationship_extraction.output
+        triplets = result.relation_extraction
         
         return triplets
     
@@ -259,7 +258,7 @@ class Neo4jExporter(Exporter):
         
         return total_exported
     
-    def execute(self, result: Result) -> None:
+    def execute(self, result: GraphBuilderResult) -> None:
         triplets = self._extract_data(result)
         if not triplets:
             self.log.info("No triplets to export")
