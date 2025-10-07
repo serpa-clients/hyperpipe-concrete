@@ -1,8 +1,9 @@
 from ..utils import TODO
+from typing import Any
 import neo4j
 
-type SchemaSummary = None
-type ConfirmationMessage = str    
+type SchemaSummary = Any
+type ConfirmationMessage = Any
 
 def transaction(tx: neo4j.Transaction, query: str, params: dict = {}) -> list[dict]:
     data = tx.run(query, **params)
@@ -23,7 +24,7 @@ class neo4jGraph:
             user=user, 
             password=password
         )
-        
+
         self.database = database
     
     def initialize_driver(
