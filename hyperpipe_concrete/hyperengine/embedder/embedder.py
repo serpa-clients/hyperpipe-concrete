@@ -1,4 +1,5 @@
 import litellm
+from .router import get_model
 
 class Embedder:
     provider: str # 'auto' | 'openai' | ...
@@ -22,8 +23,9 @@ class Embedder:
         self.debug = debug
     
     async def embed(self, query: str|list[str]) -> list[list[float]]:
+        model = get_model(self.provider, self.size)
         embeddings = await litellm.embeddings(
-            model=self.size,
+            model=model,
             input=query,
         )
 

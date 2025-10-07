@@ -1,5 +1,6 @@
 import litellm
 import pydantic
+from .router import get_model
 
 class Llm:
     provider: str # 'auto' | 'openai' | ...
@@ -38,8 +39,9 @@ class Llm:
         user: str,
         is_vision: bool
     ) -> str:
+        model = get_model(self.provider, self.size)
         completions = await litellm.completion(
-            
+            model=model,
             messages=messages,
             temperature=temperature,
         )
