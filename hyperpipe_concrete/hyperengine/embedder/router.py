@@ -20,6 +20,6 @@ models = {
 def get_model(
     provider: str,
     size: str,
-) -> str
+) -> str:
     model_name = models[provider][size]['model']
     return f'{provider}/{model_name}'

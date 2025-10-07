@@ -28,6 +28,7 @@ class Llm:
         self.retries = retries
         self.cost_warning = cost_warning
         self.debug = debug
+        self.model = get_model(self.provider, self.size)
 
     async def hallucinate(
         self,
@@ -39,9 +40,8 @@ class Llm:
         user: str,
         is_vision: bool
     ) -> str:
-        model = get_model(self.provider, self.size)
         completions = await litellm.completion(
-            model=model,
+            model=self.model,
             messages=messages,
             temperature=temperature,
         )
