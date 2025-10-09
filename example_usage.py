@@ -1,6 +1,10 @@
 import asyncio
 from hyperpipe_concrete.hyperengine import Llm, Embedder, neo4jGraph, qTracker, qChunk, Origin
 from hyperpipe_concrete.graph_builder import build_graph
+import litellm
+
+
+#litellm._turn_on_debug()
 
 async def main():
     llm = Llm(

@@ -79,11 +79,6 @@ class AsyncEntityExtractor(BaseExtractor):
         return entities
     
     def save_result(self, step_result: List[Entity], result: GraphBuilderResult) -> None:
-        current_list = result.__dict__.get('entity_extraction', [])
-        if not isinstance(current_list, list):
-            current_list = []
-        current_list.extend(step_result)
-        result.__dict__['entity_extraction'] = current_list
-            
+        result.entity_extraction.extend(step_result)
     
     

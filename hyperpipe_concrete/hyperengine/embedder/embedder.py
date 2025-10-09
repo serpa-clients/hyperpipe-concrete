@@ -2,7 +2,8 @@ import asyncio
 from typing import List
 import litellm
 import numpy as np
-from .router import get_model
+import tiktoken
+from .router import get_model, get_tokenizer, get_max_tokens
 
 class Embedder:
     provider: str # 'auto' | 'openai' | ...
@@ -25,6 +26,8 @@ class Embedder:
         self.cost_warning = cost_warning
         self.debug = debug
         self.model = get_model(self.provider, self.size)
+        self.tokenizer = tiktoken.get_encoding(get_tokenizer(self.provider, self.size))
+        self.max_tokens = get_max_tokens(self.provider, self.size)
     
     async def embed(self, query: str|list[str]) -> list[list[float]]:
        

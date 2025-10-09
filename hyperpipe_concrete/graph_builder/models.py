@@ -18,6 +18,7 @@ class Entity(BaseModel):
     label_embedding: Optional[List[float]] = Field(default=None, repr=False)
     name_embedding: Optional[List[float]] = Field(default=None, repr=False)
     alternatives: List['Entity'] = Field(default_factory=list)
+    special_type: Optional[str] = None
     
     def __eq__(self, other) -> bool:
         if isinstance(other, Entity):
@@ -53,9 +54,9 @@ class Triplet(BaseModel):
                     self.tail == other.tail)
         return False
 
-class GraphBuilderResult(Result):
+class GraphBuilderResult(BaseModel):
     model_config = {"extra": "allow"}
     
-    entity_extraction: List[Entity] = Field(default_factory=list)
-    relation_extraction: List[Triplet] = Field(default_factory=list)
+    entity_extraction: list[Entity] = Field(default_factory=list)
+    relation_extraction: list[Triplet] = Field(default_factory=list)
 
