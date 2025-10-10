@@ -3,7 +3,6 @@ from ..models import Triplet, GraphBuilderResult
 from .base_exporter import Exporter
 import json
 import re
-import rich
 
 class Neo4jExporter(Exporter):
     MAX_IDENTIFIER_LENGTH = 16383
@@ -159,6 +158,11 @@ class Neo4jExporter(Exporter):
         
         return query_part, parameters
     
+    def _normalize_name(self, name: str) -> str:
+        if not name:
+            return name
+        return name.strip().title()
+    
     def _extract_data(self, result: GraphBuilderResult) -> List[Triplet]:
         if not result.relation_extraction:
             return []
@@ -182,6 +186,11 @@ class Neo4jExporter(Exporter):
                 if triplet.metadata:
                     triplet_props = self._flatten_object_properties(triplet.metadata, "")
                     rel_props.update(triplet_props)
+                
+                if 'name' in head_props:
+                    head_props['name'] = self._normalize_name(head_props['name'])
+                if 'name' in tail_props:
+                    tail_props['name'] = self._normalize_name(tail_props['name'])
                 
                 head_labels = [self._normalize_identifier(head_props.get('label', 'Entity'), "node")]
                 tail_labels = [self._normalize_identifier(tail_props.get('label', 'Entity'), "node")]
@@ -209,13 +218,11 @@ class Neo4jExporter(Exporter):
             query = """
             UNWIND $batch AS item
             
-            CALL apoc.merge.node(item.head_labels, {name: item.head_props.name}) YIELD node as h
-            SET h += item.head_props
+            CALL apoc.merge.node(item.head_labels, {name: item.head_props.name}, item.head_props, item.head_props) YIELD node as h
             
             WITH item, h
             
-            CALL apoc.merge.node(item.tail_labels, {name: item.tail_props.name}) YIELD node as t
-            SET t += item.tail_props
+            CALL apoc.merge.node(item.tail_labels, {name: item.tail_props.name}, item.tail_props, item.tail_props) YIELD node as t
             
             WITH item, h, t
             
