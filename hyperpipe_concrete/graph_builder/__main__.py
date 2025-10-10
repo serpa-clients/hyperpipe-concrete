@@ -2,8 +2,6 @@ from typing import List
 
 from hyperpipe_core import AsyncBatchPipeline, ParallelBatchPipeline, Pipeline,PipelineRunner
 
-from ..hyperengine import qTracker, neo4jGraph, Llm, Embedder
-
 from .extraction import AsyncEntityExtractor, AsyncRelationExtractor 
 from .merging import EntityTextMerger, RelationTextMerger, TripletEntityMerger
 from .exporting import Neo4jExporter
@@ -66,11 +64,12 @@ def merge_config(user_config: dict = None) -> dict:
             merged[key] = value
     return merged
 
-async def build_graph(qtracker: qTracker,
-                neo4j_graph: neo4jGraph,
-                llm: Llm,
-                embedder: Embedder,
-                config: dict = None):
+async def build_graph(qtracker,
+                neo4j_graph,
+                llm,
+                embedder,
+                config: dict = None,
+                logger = None):
     
     config = merge_config(config)
 
@@ -146,7 +145,33 @@ async def build_graph(qtracker: qTracker,
     
     
     runner = PipelineRunner(final_pipeline, result_class=GraphBuilderResult) 
+    from hyperpipe_core.logger import SupportsLogging
+    from hyperpipe_core.pipe.runner import PipelineNode
+
+    def _set_logger(root_logger: SupportsLogging, node: PipelineNode):
+        parent = node['parent']
+        current = node['current']
+
+        if parent is None:
+            logger = root_logger
+        else:
+            logger = parent.get_logger()
+        
+        current_logger = logger.getChild(current.get_identifier(include_address=False))
+
+        current.set_logger(current_logger)
+        
+        return current_logger
+
+    def set_logger(logger: SupportsLogging):
+        def _(node: PipelineNode):
+            _set_logger(logger, node)
+            return node
+        return _
     
+    
+
+    runner.map_transform([set_logger(logger)])
     return await runner.arun(qtracker)
 
 

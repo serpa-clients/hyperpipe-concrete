@@ -12,12 +12,6 @@ class Exporter(Step):
         self.name = name or self.__class__.__name__
         self._logger = logger
     
-    @property
-    def log(self) -> logging.Logger:
-        if self._logger is None:
-            self._logger = logging.getLogger(self.__class__.__name__)
-        return self._logger
-    
     def execute(self, input_data: GraphBuilderResult) -> None:
         """Execute the data exporting step"""
         
