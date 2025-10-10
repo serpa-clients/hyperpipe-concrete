@@ -1,6 +1,5 @@
 from typing import List, Tuple
 
-from ...hyperengine import qChunk
 from ..models import Triplet, TripletMetadata, Relationship, Entity, GraphBuilderResult
 
 from .base_extractor import BaseExtractor
@@ -43,7 +42,7 @@ class AsyncRelationExtractor(BaseExtractor):
         end = max(pos[1] for pos in positions)
         return start, end
 
-    def convert_to_domain(self, parsed_model: RelationsListResponse, chunk: qChunk, entities: List[Entity]) -> List[Triplet]:
+    def convert_to_domain(self, parsed_model: RelationsListResponse, chunk, entities: List[Entity]) -> List[Triplet]:
 
         triplets = []
         
@@ -122,7 +121,7 @@ class AsyncRelationExtractor(BaseExtractor):
         
         return triplets
     
-    async def extract_relations_from_chunk(self, chunk: qChunk, entities: List[Entity]) -> List[Triplet]:
+    async def extract_relations_from_chunk(self, chunk, entities: List[Entity]) -> List[Triplet]:
         
         entity_info = []
         for e in entities:

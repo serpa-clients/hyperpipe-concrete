@@ -2,12 +2,11 @@ from typing import List
 from ..models import Entity, Relationship, Triplet, GraphBuilderResult
 from hyperpipe_core import AsyncStep
 import asyncio
-from ...hyperengine import Embedder
 
 class TripletEmbedder(AsyncStep):
     def __init__(
         self,
-        embedder: Embedder,
+        embedder,
         name: str = "TripletEmbedder",
         entity_name_weight: float = 0.6,
         entity_label_weight: float = 0.4,

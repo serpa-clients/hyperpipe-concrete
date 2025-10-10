@@ -5,7 +5,6 @@ import asyncio
 import time
 
 from hyperpipe_core import AsyncStep, Result
-from ...hyperengine import Llm
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -14,7 +13,7 @@ R = TypeVar('R')
 
 class BaseLLMStep(AsyncStep, Generic[T, U, R]):
     def __init__(self,
-                 llm: Llm,
+                 llm,
                  temperature: float = 0.1,
                  name: str = None,
                  examples: List[Dict[str, str]] = None,
