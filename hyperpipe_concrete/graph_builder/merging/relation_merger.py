@@ -47,16 +47,23 @@ class RelationTextMerger(Step):
         relationships = [triplet.relation for triplet in result.relation_extraction]
         self.log.info(f"Merging {len(relationships)} relations")
         
-        # Perform name-based deduplication
-        relationships = self._deduplicate_by_name(relationships)
-        self.log.info(f"Name-based deduplication completed: {len(relationships)} relationships remaining")
+        unique_relationships = self._deduplicate_by_name(relationships)
+        self.log.info(f"Name-based deduplication completed: {len(unique_relationships)} unique relationship types")
         
-        # Update the triplets with the merged relationships
-        for i, triplet in enumerate(result.relation_extraction):
-            if i < len(relationships):
-                triplet.relation = relationships[i]
+        canonical_map = {}
+        for unique_rel in unique_relationships:
+            canonical_map[unique_rel.name.lower()] = unique_rel
         
-        self.log.info(f"Relation merging completed: {len(relationships)} final relationships")
+        merge_count = 0
+        for triplet in result.relation_extraction:
+            canonical_key = triplet.relation.name.lower()
+            if canonical_key in canonical_map:
+                if triplet.relation.name != canonical_map[canonical_key].name:
+                    merge_count += 1
+                    self.log.debug(f"Relation merged: {triplet.relation.name} -> {canonical_map[canonical_key].name}")
+                triplet.relation = canonical_map[canonical_key]
+        
+        self.log.info(f"Relation merging completed: {merge_count} relations merged to canonical forms")
         return result
 
     def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult):
