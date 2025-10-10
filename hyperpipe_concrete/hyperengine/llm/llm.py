@@ -40,7 +40,6 @@ class Llm:
         user: str,
         is_vision: bool
     ) -> str:
-        from rich import print
         
         completions = await litellm.acompletion(
             model=self.model,
@@ -48,7 +47,5 @@ class Llm:
             temperature=temperature,
             response_format=response_format,
         )
-        print(completions)
         result = completions.choices[0].message.content
-        print(result)
         return result
