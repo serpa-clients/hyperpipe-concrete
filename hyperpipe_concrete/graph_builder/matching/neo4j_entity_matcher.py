@@ -143,12 +143,11 @@ class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
                 neo4j_name, neo4j_label, score = similar_result
                 self.log.debug(f"Neo4j match found: {entity.name} -> {neo4j_name} (score: {score:.3f})")
                 
-                if entity.name.lower() != neo4j_name.lower():
-                    replacement_entity = self._create_replacement_entity(
-                        entity, neo4j_name, neo4j_label
-                    )
-                    entity_mapping[entity_key] = replacement_entity
-                    matches_found += 1
+                replacement_entity = self._create_replacement_entity(
+                    entity, neo4j_name, neo4j_label
+                )
+                entity_mapping[entity_key] = replacement_entity
+                matches_found += 1
         
         if entity_mapping:
 
