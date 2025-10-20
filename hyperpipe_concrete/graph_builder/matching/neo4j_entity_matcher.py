@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional, Tuple
-from hyperpipe_core import Step
+from hyperpipe_core import AsyncStep
 from ..models import Triplet, Entity, GraphBuilderResult
 
 
@@ -124,7 +124,6 @@ class Neo4jEntityMatcher(AsyncStep[GraphBuilderResult, None]):
         if not result.relation_extraction:
             return None
         
-        await self._ensure_index_exists()
         
         triplets = result.relation_extraction
         unique_entities = self._extract_unique_entities(triplets)

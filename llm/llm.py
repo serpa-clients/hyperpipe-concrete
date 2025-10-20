@@ -39,7 +39,7 @@ class Llm:
         response_format: pydantic.BaseModel,
         user: str,
         is_vision: bool
-    ):
+    ) -> str:
         
         completions = await litellm.acompletion(
             model=self.model,
