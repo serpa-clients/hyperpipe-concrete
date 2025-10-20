@@ -1,9 +1,9 @@
 from typing import List, Dict, Optional, Tuple
-from hyperpipe_core import Step
+from hyperpipe_core import AsyncStep
 from ..models import Triplet, Entity, GraphBuilderResult
 
 
-class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
+class Neo4jEntityMatcher(AsyncStep[GraphBuilderResult, None]):
     
     def __init__(
         self,
@@ -11,14 +11,50 @@ class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
         name: str = "Neo4jEntityMatcher",
         similarity_threshold: float = 0.85,
         top_k: int = 1,
-        vector_index_name: str = "embedded_entities_index"
+        vector_index_name: str = "embedded_entities_index",
+        embedded_label: str = "Embedded",
+        embedding_dimension: int = 1536
     ):
         self.name = name
         self.neo4j_graph = neo4j_graph
         self.similarity_threshold = similarity_threshold
         self.top_k = top_k
         self.vector_index_name = vector_index_name
+        self.embedded_label = embedded_label
+        self.embedding_dimension = embedding_dimension
+        self._index_checked = False
         
+    async def _ensure_index_exists(self) -> None:
+        if self._index_checked:
+            return
+        
+        try:
+            indexes = await self.neo4j_graph.schema()
+            index_exists = any(
+                idx.get('name') == self.vector_index_name 
+                for idx in indexes
+            )
+            
+            if not index_exists:
+                self.log.info(f"Vector index '{self.vector_index_name}' not found, creating it")
+                await self.neo4j_graph.create_index(
+                    index_name=self.vector_index_name,
+                    label=self.embedded_label,
+                    property_name='embedding',
+                    kind='vector',
+                    dimension=self.embedding_dimension,
+                    similarity_function='cosine'
+                )
+                self.log.info(f"Vector index '{self.vector_index_name}' created successfully")
+            else:
+                self.log.info(f"Vector index '{self.vector_index_name}' already exists")
+            
+            self._index_checked = True
+            
+        except Exception as e:
+            self.log.error(f"Failed to check/create index: {e}")
+            raise
+    
     def _extract_unique_entities(self, triplets: List[Triplet]) -> Dict[str, Entity]:
         unique_entities = {}
         
@@ -36,7 +72,7 @@ class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
     
 
     
-    def _find_similar_entity_in_neo4j(self, entity: Entity) -> Optional[Tuple[str, str, float]]:
+    async def _find_similar_entity_in_neo4j(self, entity: Entity) -> Optional[Tuple[str, str, float]]:
         
         if not entity.embedding:
             return None
@@ -58,7 +94,7 @@ class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
                 "threshold": self.similarity_threshold
             }
             
-            results = self.neo4j_graph.read_query(query, params)
+            results = await self.neo4j_graph.read_query(query, params)
             
             if results:
                 result = results[0]
@@ -119,10 +155,12 @@ class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
         
         return triplets
     
-    def execute(self, result: GraphBuilderResult) -> None:
+    async def execute(self, result: GraphBuilderResult) -> None:
         
         if not result.relation_extraction:
             return None
+        
+        await self._ensure_index_exists()
         
         triplets = result.relation_extraction
         unique_entities = self._extract_unique_entities(triplets)
@@ -138,7 +176,7 @@ class Neo4jEntityMatcher(Step[GraphBuilderResult, None]):
             elif entity.special_type == 'PRICE':
                 continue
             
-            similar_result = self._find_similar_entity_in_neo4j(entity)
+            similar_result = await self._find_similar_entity_in_neo4j(entity)
             if similar_result:
                 neo4j_name, neo4j_label, score = similar_result
                 self.log.debug(f"Neo4j match found: {entity.name} -> {neo4j_name} (score: {score:.3f})")

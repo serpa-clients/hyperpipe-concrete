@@ -34,6 +34,8 @@ def get_default_config():
             'neo4j_matcher': {
                 'similarity_threshold': 0.85,
                 'vector_index_name': 'embedded_entities_index',
+                'embedded_label': 'Embedded',
+                'embedding_dimension': 1536,
             },
             'neo4j_exporter': {
                 'batch_size': 100,

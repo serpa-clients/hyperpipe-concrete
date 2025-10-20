@@ -1,17 +1,17 @@
 from typing import List, Dict, Any
 from ..models import Triplet, GraphBuilderResult
-from .base_exporter import Exporter
+from hyperpipe_core import AsyncStep
 import json
 import re
 
-class Neo4jExporter(Exporter):
+class Neo4jExporter(AsyncStep[GraphBuilderResult, None]):
     MAX_IDENTIFIER_LENGTH = 16383
     TRUNCATE_SUFFIX = '_trunc'
     DEFAULT_NAMES = {"node": "Entity", "rel": "RELATES", "prop": "property"}
     PROGRESS_LOG_INTERVAL = 100
     
     def __init__(self, neo4j_graph, name: str = None, batch_size: int = 100, embedded_label: str = "Embedded"):
-        super().__init__(name)
+        self.name = name or self.__class__.__name__
         self.neo4j_graph = neo4j_graph
         self.batch_size = batch_size
         self.embedded_label = embedded_label
@@ -171,7 +171,7 @@ class Neo4jExporter(Exporter):
         
         return triplets
     
-    def _export_batch(self, triplets_batch: List[Triplet]) -> int:
+    async def _export_batch(self, triplets_batch: List[Triplet]) -> int:
         if not triplets_batch:
             return 0
         
@@ -230,7 +230,7 @@ class Neo4jExporter(Exporter):
             RETURN count(r) as created
             """
             
-            result = self.neo4j_graph.write_query(query, params={"batch": batch_data})
+            result = await self.neo4j_graph.write_query(query, params={"batch": batch_data})
             exported_count = len(triplets_batch)
             self.log.debug(f"Batch export successful: {exported_count} triplets")
             return exported_count
@@ -248,7 +248,7 @@ class Neo4jExporter(Exporter):
             self.log.error(f"Failed batch context - size: {len(triplets_batch)}, embedded_label: '{self.embedded_label}'")
             return 0
     
-    def _export_data(self, triplets: List[Triplet]) -> int:
+    async def _export_data(self, triplets: List[Triplet]) -> int:
         if not triplets:
             return 0
         
@@ -260,19 +260,22 @@ class Neo4jExporter(Exporter):
             batch_num = (i // self.batch_size) + 1
             self.log.debug(f"Processing export batch {batch_num}/{total_batches}: {len(batch)} triplets")
             
-            batch_exported = self._export_batch(batch)
+            batch_exported = await self._export_batch(batch)
             total_exported += batch_exported
         
         return total_exported
     
-    def execute(self, result: GraphBuilderResult) -> None:
+    async def execute(self, result: GraphBuilderResult) -> None:
         triplets = self._extract_data(result)
         if not triplets:
             self.log.info("No triplets to export")
             return None
         
         self.log.info(f"Exporting {len(triplets)} triplets to Neo4j")
-        self._export_data(triplets)
+        await self._export_data(triplets)
         self.log.info(f"Export completed")
         
         return None
+    
+    def save_result(self, step_result: GraphBuilderResult, result: GraphBuilderResult) -> None:
+        pass

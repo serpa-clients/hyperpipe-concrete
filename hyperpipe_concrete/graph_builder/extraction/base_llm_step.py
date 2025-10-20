@@ -66,7 +66,7 @@ class BaseLLMStep(AsyncStep, Generic[T, U, R]):
                 if elapsed_time > total_timeout:
                     return []
 
-                content = await self.llm.hallucinate(
+                result = await self.llm.hallucinate(
                     messages=hallucination_params["messages"],
                     temperature=hallucination_params.get("temperature", self.temperature),
                     tools=hallucination_params.get("tools", []),
@@ -75,6 +75,7 @@ class BaseLLMStep(AsyncStep, Generic[T, U, R]):
                     user=hallucination_params.get("user", self.name or ""),
                     is_vision=hallucination_params.get("is_vision", False),
                 )
+                content = result.message.content
 
                 if '```json' in content:
                     content = content.split('```json', 1)[1].split('```', 1)[0].strip()
