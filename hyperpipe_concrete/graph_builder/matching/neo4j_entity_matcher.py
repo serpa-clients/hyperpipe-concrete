@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional, Tuple
-from hyperpipe_core import AsyncStep
+from hyperpipe_core import Step
 from ..models import Triplet, Entity, GraphBuilderResult
 
 
@@ -11,50 +11,14 @@ class Neo4jEntityMatcher(AsyncStep[GraphBuilderResult, None]):
         name: str = "Neo4jEntityMatcher",
         similarity_threshold: float = 0.85,
         top_k: int = 1,
-        vector_index_name: str = "embedded_entities_index",
-        embedded_label: str = "Embedded",
-        embedding_dimension: int = 1536
+        vector_index_name: str = "embedded_entities_index"
     ):
         self.name = name
         self.neo4j_graph = neo4j_graph
         self.similarity_threshold = similarity_threshold
         self.top_k = top_k
         self.vector_index_name = vector_index_name
-        self.embedded_label = embedded_label
-        self.embedding_dimension = embedding_dimension
-        self._index_checked = False
         
-    async def _ensure_index_exists(self) -> None:
-        if self._index_checked:
-            return
-        
-        try:
-            indexes = await self.neo4j_graph.schema()
-            index_exists = any(
-                idx.get('name') == self.vector_index_name 
-                for idx in indexes
-            )
-            
-            if not index_exists:
-                self.log.info(f"Vector index '{self.vector_index_name}' not found, creating it")
-                await self.neo4j_graph.create_index(
-                    index_name=self.vector_index_name,
-                    label=self.embedded_label,
-                    property_name='embedding',
-                    kind='vector',
-                    dimension=self.embedding_dimension,
-                    similarity_function='cosine'
-                )
-                self.log.info(f"Vector index '{self.vector_index_name}' created successfully")
-            else:
-                self.log.info(f"Vector index '{self.vector_index_name}' already exists")
-            
-            self._index_checked = True
-            
-        except Exception as e:
-            self.log.error(f"Failed to check/create index: {e}")
-            raise
-    
     def _extract_unique_entities(self, triplets: List[Triplet]) -> Dict[str, Entity]:
         unique_entities = {}
         
