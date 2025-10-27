@@ -3,7 +3,7 @@ name = "hyperpipe-concrete"
 version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = "==3.11.13"
+requires-python = ">=3.11.13"
 dependencies = [
     "dateparser>=1.2.2",
     "hyperpipe-core @ git+ssh://git@github.com/icc-q99/hyperpipe-core",
