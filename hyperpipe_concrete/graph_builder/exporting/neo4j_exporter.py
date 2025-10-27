@@ -69,7 +69,7 @@ class Neo4jExporter(AsyncStep[GraphBuilderResult, None]):
         if isinstance(value, dict):
             return json.dumps(value)
         if hasattr(value, 'dict'):
-            return json.dumps(value.dict())
+            return json.dumps(value.model_dump())
         return value
     
     def _flatten_object_properties(self, obj: Any, prefix: str = "") -> Dict[str, Any]:
@@ -79,7 +79,7 @@ class Neo4jExporter(AsyncStep[GraphBuilderResult, None]):
         properties = {}
         
         if hasattr(obj, 'dict'):
-            obj_dict = obj.dict()
+            obj_dict = obj.model_dump()
         elif isinstance(obj, dict):
             obj_dict = obj
         else:
@@ -103,7 +103,7 @@ class Neo4jExporter(AsyncStep[GraphBuilderResult, None]):
                     alternatives_tuples = []
                     for item in field_value:
                         if hasattr(item, 'dict'):
-                            item_dict = item.dict()
+                            item_dict = item.model_dump()
                             name = item_dict.get('name', 'unknown')
                             source = item_dict.get('source', 'unknown')
                             chunk_id = item_dict.get('chunk_id', 'unknown')
