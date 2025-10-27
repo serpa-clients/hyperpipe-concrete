@@ -1,6 +1,6 @@
 from typing import List
 
-from hyperpipe_core import AsyncBatchPipeline, ParallelBatchPipeline, Pipeline,PipelineRunner
+from hyperpipe_core import AsyncBatchPipeline, Pipeline,PipelineRunner
 
 from .extraction import AsyncEntityExtractor, AsyncRelationExtractor 
 from .merging import EntityTextMerger, RelationTextMerger, TripletEntityMerger
@@ -34,7 +34,6 @@ def get_default_config():
             'neo4j_matcher': {
                 'similarity_threshold': 0.85,
                 'vector_index_name': 'embedded_entities_index',
-                'embedded_label': 'Embedded',
                 'embedding_dimension': 1536,
             },
             'neo4j_exporter': {
@@ -117,11 +116,11 @@ async def build_graph(qtracker,
     def create_batch_pipeline(entity_pipes: List, relation_pipes: List) -> Pipeline:
         
         components = [
-            ParallelBatchPipeline(
+            AsyncBatchPipeline(
                 entity_pipes, name="Entity"
             ),
             entity_text_merger,
-            ParallelBatchPipeline(
+            AsyncBatchPipeline(
                 relation_pipes, name="Relation"
             ),
             triplet_entity_merger,
