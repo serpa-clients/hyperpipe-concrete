@@ -9,6 +9,7 @@ from .cleaning import EntityCleaner, TripletCleaner
 from .embedding import TripletEmbedder
 from .matching import Neo4jEntityMatcher
 from .models import GraphBuilderResult
+from hyperpipe_core.logger import set_logger
 
 def get_default_config():
     return {
@@ -146,32 +147,7 @@ async def build_graph(qtracker,
     
     
     runner = PipelineRunner(final_pipeline, result_class=GraphBuilderResult) 
-    from hyperpipe_core.logger import SupportsLogging
-    from hyperpipe_core.pipe.runner import PipelineNode
-
-    def _set_logger(root_logger: SupportsLogging, node: PipelineNode):
-        parent = node['parent']
-        current = node['current']
-
-        if parent is None:
-            logger = root_logger
-        else:
-            logger = parent.get_logger()
-        
-        current_logger = logger.getChild(current.get_identifier(include_address=False))
-
-        current.set_logger(current_logger)
-        
-        return current_logger
-
-    def set_logger(logger: SupportsLogging):
-        def _(node: PipelineNode):
-            _set_logger(logger, node)
-            return node
-        return _
     
-    
-
     runner.map_transform([set_logger(logger)])
     return await runner.arun(qtracker)
 
